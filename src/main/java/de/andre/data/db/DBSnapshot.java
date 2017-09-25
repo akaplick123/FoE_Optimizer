@@ -27,14 +27,23 @@ public class DBSnapshot {
     @ManyToOne(optional = false)
     private DBExperiment experiment;
 
-    @Column(name = "FIELD", length = 100, nullable = false)
-    private String encodedField;
+    @Column(name = "RATING", nullable = false)
+    private int rating;
 
     @Column(name = "HOUSES", nullable = false)
     private int numberOfHouses;
 
+    @Column(name = "WAYS", nullable = false)
+    private int ways;
+
     @Column(name = "TILES_USED", nullable = false)
-    private int tilesOccupied;
+    private int tilesOccupied;   
+    
+    @Column(name = "FIELD", length = 2500, nullable = false)
+    private String encodedField;
+
+    @Column(name = "RAM_USED", nullable = false)
+    private long memUsage;
 
     @Column(name = "SNAPSHOT_TIME", nullable = false)
     private LocalDateTime timestamp;

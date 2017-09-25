@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import de.andre.data.IFoEGameboard;
 import de.andre.data.Tile;
 import de.andre.data.TileState;
-import de.andre.data.impl.Integer1DimArrayBoard;
 import de.andre.process.util.GameBoardRepository;
 import de.andre.process.util.ManuelPlacement;
 
@@ -73,9 +72,5 @@ public class EndlessConstruction extends AbstractOptimization {
 		System.gc();
 	    }
 	}
-    }
-
-    public IFoEGameboard createRandomBoard() {
-	return new Integer1DimArrayBoard(getGamefieldWidth(), getGamefieldHeight());
     }
 }

@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import de.andre.data.IFoEGameboard;
 import de.andre.data.Tile;
 import de.andre.data.TileState;
-import de.andre.data.impl.Integer1DimArrayBoard;
 import de.andre.process.util.ManuelPlacement;
 
 @Component
@@ -69,10 +68,6 @@ public class DeepSearchPlacement extends AbstractOptimization {
 		}
 	    }
 	}
-    }
-
-    private IFoEGameboard createRandomBoard() {
-	return new Integer1DimArrayBoard(getGamefieldWidth(), getGamefieldHeight());
     }
 
     private void offer(Deque<IFoEGameboard> queue, IFoEGameboard gf) {

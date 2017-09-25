@@ -9,6 +9,8 @@ import de.andre.data.IFoEGameboard;
 import de.andre.data.db.DBExperiment;
 import de.andre.data.db.DBExperimentParameter;
 import de.andre.data.db.DBRepository;
+import de.andre.data.db.DBSnapshot;
+import de.andre.data.impl.Integer1DimArrayBoard;
 import de.andre.process.util.BoardVisualizer;
 import lombok.extern.log4j.Log4j;
 
@@ -27,26 +29,30 @@ public abstract class AbstractOptimization {
 
     protected abstract void start();
 
-    protected int getGamefieldWidth() {
+    private int getGamefieldWidth() {
 	return GAMEFIELD_WIDTH;
     }
 
-    protected int getGamefieldHeight() {
+    private int getGamefieldHeight() {
 	return GAMEFIELD_HEIGHT;
+    }
+
+    protected IFoEGameboard createRandomBoard() {
+	return new Integer1DimArrayBoard(getGamefieldWidth(), getGamefieldHeight());
     }
 
     protected void log(String msg) {
 	log.info(msg);
     }
 
-    protected void logParameter(String name, Number value) {
-	logParameter(name, "" + value);
-    }
-
-    protected void initExperiment() {
+    private void initExperiment() {
 	DBExperiment exp = new DBExperiment();
 	exp.setDriver(getClass().getSimpleName());
 	this.exp = repository.save(exp);
+    }
+
+    protected void logParameter(String name, Number value) {
+	logParameter(name, "" + value);
     }
 
     protected void logParameter(String name, String value) {
@@ -72,27 +78,73 @@ public abstract class AbstractOptimization {
 	}
     }
 
-    protected IFoEGameboard getBestRatedGamefield() {
+    private IFoEGameboard getBestRatedGamefield() {
 	synchronized (this) {
 	    return bestRatingGamefield;
 	}
     }
 
-    protected int getBestRating() {
+    private int getBestRating() {
 	synchronized (this) {
 	    return maxRatingUntilNow;
 	}
     }
 
-    protected void logSnapshot(IFoEGameboard board) {
-	// TODO
+    private void logSnapshot(IFoEGameboard board) {
+	// collect data
+	int houses = 0;
+	int ways = 0;
+	int tilesOccupied = 0;
+	StringBuilder encodedField = new StringBuilder();
+
+	for (int y = 0; y < board.getHeight(); y++) {
+	    for (int x = 0; x < board.getWidth(); x++) {
+		switch (board.getBuilding(x, y)) {
+		case FREE:
+		    encodedField.append(".");
+		    break;
+		case CASTLE:
+		    encodedField.append("C");
+		    tilesOccupied++;
+		    break;
+		case WAY:
+		    encodedField.append("w");
+		    ways++;
+		    tilesOccupied++;
+		    break;
+		case HOUSE:
+		    encodedField.append("H");
+		    houses++;
+		    tilesOccupied++;
+		    break;
+		}
+	    }
+	    encodedField.append("\n");
+	}
+
+	DBSnapshot snapshot = new DBSnapshot();
+	snapshot.setExperiment(exp);
+	snapshot.setRating(board.getRating());
+	snapshot.setNumberOfHouses(houses);
+	snapshot.setWays(ways);
+	snapshot.setTilesOccupied(tilesOccupied);
+	snapshot.setEncodedField(encodedField.toString());
+	snapshot.setMemUsage(getMemUsage());
+	repository.save(snapshot);
+
+	// print board to sysout
 	BoardVisualizer.print(board);
+    }
+
+    private long getMemUsage() {
+	Runtime runtime = Runtime.getRuntime();
+	return (runtime.totalMemory() - runtime.freeMemory());
     }
 
     public void runDBExperiment() {
 	initExperiment();
 	logAllParameter();
-	
+
 	ProgressLoggingThread logger = new ProgressLoggingThread();
 	logger.start();
 
@@ -103,7 +155,7 @@ public abstract class AbstractOptimization {
 	}
     }
 
-    public class ProgressLoggingThread extends Thread {
+    private class ProgressLoggingThread extends Thread {
 	public ProgressLoggingThread() {
 	    super("ProgressLogger");
 	}
