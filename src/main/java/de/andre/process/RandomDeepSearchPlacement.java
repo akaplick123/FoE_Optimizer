@@ -5,54 +5,43 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import de.andre.data.IFoEGameboard;
 import de.andre.data.Tile;
 import de.andre.data.TileState;
 import de.andre.data.impl.Integer1DimArrayBoard;
-import de.andre.process.util.BoardVisualizer;
 import de.andre.process.util.ManuelPlacement;
 import de.andre.process.util.ModifieableIterator;
 import de.andre.process.util.PreferNewSortedLimitedList;
-import lombok.extern.log4j.Log4j;
 
-@Log4j
-public class RandomDeepSearchPlacement {
+@Component
+public class RandomDeepSearchPlacement extends AbstractOptimization {
     private static final GamefieldComparator GAMEFIELD_COMPARATOR = new GamefieldComparator();
 
-    private static final int GAMEFIELD_WIDTH = 24;
-    private static final int GAMEFIELD_HEIGHT = 20;
-    private static final int MAX_SAVED_GAMEFIELDS_PER_STEP = 300;
-    private static final int MAX_SAVED_GAMEFIELDS_PER_RESET = 2;
-    private static final int MAX_ITERATIONS_BEFORE_RESET = 500;
-
-    public static void main(String[] args) throws Exception {
-	new RandomDeepSearchPlacement().start();
-    }
+    @Value("${exp.deep.max.saved.gamefields.per.step}")
+    private int MAX_SAVED_GAMEFIELDS_PER_STEP = 300;
+    @Value("${exp.deep.max.saved.gamefields.per.reset}")
+    private int MAX_SAVED_GAMEFIELDS_PER_RESET = 2;
+    @Value("${exp.deep.max.iterations.before.reset}")
+    private int MAX_ITERATIONS_BEFORE_RESET = 500;
 
     private Random r;
-    private int maxRatingUntilNow = Integer.MIN_VALUE;
-    private IFoEGameboard bestRatingGamefield;
 
-    private void log(String msg) {
-	log.info(msg);
-    }
-
-    private void start() {
+    public void start() {
 	long seed = new Random().nextLong();
-	// seed = -6542860481660332438L;
-	log("start with Random.seed = " + seed);
-	r = new Random(seed);
-	log("MAX_SAVED_GAMEFIELDS_PER_STEP = " + MAX_SAVED_GAMEFIELDS_PER_STEP);
-	log("MAX_SAVED_GAMEFIELDS_PER_RESET = " + MAX_SAVED_GAMEFIELDS_PER_RESET);
-	log("MAX_ITERATIONS_BEFORE_RESET = " + MAX_ITERATIONS_BEFORE_RESET);
+	logParameter("MAX_SAVED_GAMEFIELDS_PER_STEP", MAX_SAVED_GAMEFIELDS_PER_STEP);
+	logParameter("MAX_SAVED_GAMEFIELDS_PER_RESET", MAX_SAVED_GAMEFIELDS_PER_RESET);
+	logParameter("MAX_ITERATIONS_BEFORE_RESET", MAX_ITERATIONS_BEFORE_RESET);
+	logParameter("random.seed", seed);
 
-	ProgressLoggingThread logger = new ProgressLoggingThread(this);
-	logger.start();
+	// seed = -6542860481660332438L;
+	r = new Random(seed);
 
 	BestGamefields queue = new BestGamefields();
-	IFoEGameboard startingBoard = createRandomBoard(GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT);
+	IFoEGameboard startingBoard = createRandomBoard();
 	queue.offer(startingBoard);
 	ManuelPlacement.createAndPrintReference(startingBoard);
 
@@ -82,8 +71,8 @@ public class RandomDeepSearchPlacement {
 	}
     }
 
-    private IFoEGameboard createRandomBoard(int gamefieldWidth, int gamefieldHeight) {
-	return new Integer1DimArrayBoard(gamefieldWidth, gamefieldHeight);
+    private IFoEGameboard createRandomBoard() {
+	return new Integer1DimArrayBoard(getGamefieldWidth(), getGamefieldHeight());
     }
 
     /**
@@ -129,27 +118,6 @@ public class RandomDeepSearchPlacement {
 	}
     }
 
-    private void addGamefieldToTopList(IFoEGameboard gamefieldClone) {
-	synchronized (this) {
-	    if (gamefieldClone.getRating() > maxRatingUntilNow) {
-		this.maxRatingUntilNow = gamefieldClone.getRating();
-		this.bestRatingGamefield = gamefieldClone;
-	    }
-	}
-    }
-
-    public IFoEGameboard getBestRatedGamefield() {
-	synchronized (this) {
-	    return bestRatingGamefield;
-	}
-    }
-
-    public int getBestRating() {
-	synchronized (this) {
-	    return maxRatingUntilNow;
-	}
-    }
-
     private static Tile choose(Random r, List<Tile> options) {
 	if (options.isEmpty()) {
 	    throw new NullPointerException("No options to choose from.");
@@ -159,7 +127,7 @@ public class RandomDeepSearchPlacement {
 	return options.get(index);
     }
 
-    private static class BestGamefields {
+    private class BestGamefields {
 	private HashMap<Integer, PreferNewSortedLimitedList<IFoEGameboard>> mapByUsedTiles = new HashMap<>();
 
 	/**
@@ -211,37 +179,6 @@ public class RandomDeepSearchPlacement {
 	    }
 
 	    return delta;
-	}
-    }
-
-    public static class ProgressLoggingThread extends Thread {
-	private final RandomDeepSearchPlacement experiment;
-
-	public ProgressLoggingThread(RandomDeepSearchPlacement experiment) {
-	    super("ProgressLogger");
-	    this.experiment = experiment;
-	}
-
-	@Override
-	public void run() {
-	    try {
-		IFoEGameboard bestLoggedGamefield = null;
-		while (true) {
-		    TimeUnit.SECONDS.sleep(10);
-		    System.gc();
-		    IFoEGameboard currentBestGamefield = experiment.getBestRatedGamefield();
-		    if (currentBestGamefield.equals(bestLoggedGamefield)) {
-			// don't repeat myself
-			experiment.log(
-				"no new best field (current rating to beat is " + experiment.getBestRating() + ")");
-		    } else {
-			experiment.log("best field until now is:");
-			bestLoggedGamefield = currentBestGamefield;
-			BoardVisualizer.print(bestLoggedGamefield);
-		    }
-		}
-	    } catch (InterruptedException e) {
-	    }
 	}
     }
 }

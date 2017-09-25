@@ -9,8 +9,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import lombok.Data;
+
 @Entity(name = "DBExperiment")
 @Table(name = "EXPERIMENT")
+@Data
 public class DBExperiment {
     @Id
     @Column(name = "ID_EXPERIMENT")

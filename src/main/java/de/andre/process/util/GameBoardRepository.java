@@ -93,23 +93,6 @@ public class GameBoardRepository {
 	throw new UnsupportedOperationException("Cannot choode from an empty Repository.");
     }
 
-    public IFoEGameboard getTopRatedBoard() {
-	int maxRating = 0;
-	IFoEGameboard maxRatedBoard = null;
-
-	for (List<IFoEGameboard> group : groups.values()) {
-	    for (IFoEGameboard board : group) {
-		int rating = board.getRating();
-		if ((maxRatedBoard == null) || (rating > maxRating)) {
-		    maxRatedBoard = board;
-		    maxRating = rating;
-		}
-	    }
-	}
-
-	return maxRatedBoard;
-    }
-
     /**
      * For UnitTests only.
      * 

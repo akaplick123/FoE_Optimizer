@@ -6,51 +6,42 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import de.andre.data.IFoEGameboard;
 import de.andre.data.Tile;
 import de.andre.data.TileState;
 import de.andre.data.impl.Integer1DimArrayBoard;
-import de.andre.process.util.BoardVisualizer;
 import de.andre.process.util.ManuelPlacement;
-import lombok.extern.log4j.Log4j;
 
-@Log4j
-public class DeepSearchPlacement {
-    private static final int GAMEFIELD_WIDTH = 24;
-    private static final int GAMEFIELD_HEIGHT = 20;
-
-    private static final int MAX_QUEUE_SIZE_LOWER_BOUND = 900_000;
-    private static final int MAX_QUEUE_SIZE_UPPER_BOUND = 2_000_000;
-
-    public static void main(String[] args) throws Exception {
-	new DeepSearchPlacement().start();
-    }
-
-    private int maxRatingUntilNow = Integer.MIN_VALUE;
-    private IFoEGameboard bestRatingGamefield;
-
-    private void log(String msg) {
-	log.info(msg);
-    }
+@Component
+public class DeepSearchPlacement extends AbstractOptimization {
+    @Value("${exp.max.queue.size.lower.bound}")
+    private int MAX_QUEUE_SIZE_LOWER_BOUND = 900_000;
+    @Value("${exp.max.queue.size.upper.bound}")
+    private int MAX_QUEUE_SIZE_UPPER_BOUND = 2_000_000;
 
     private Random r;
     private Deque<IFoEGameboard> queue = new LinkedList<>();
     private boolean queueIsFull = false;
 
-    private void start() {
-	log("start");
-	r = new Random();
+    public void start() {
+	long seed = new Random().nextLong();
+	logParameter("MAX_QUEUE_SIZE_LOWER_BOUND", MAX_QUEUE_SIZE_LOWER_BOUND);
+	logParameter("MAX_QUEUE_SIZE_UPPER_BOUND", MAX_QUEUE_SIZE_UPPER_BOUND);
+	logParameter("random.seed", seed);
 
-	ProgressLoggingThread logger = new ProgressLoggingThread(this);
-	logger.start();
+	// seed = -6542860481660332438L;
+	r = new Random(seed);
 
-	IFoEGameboard startingBoard = createRandomBoard(GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT);
+	IFoEGameboard startingBoard = createRandomBoard();
 	queue.offer(startingBoard);
 	ManuelPlacement.createAndPrintReference(startingBoard);
 
 	while (!queue.isEmpty()) {
 	    IFoEGameboard gf = queue.poll();
-	    addGamefieldToTopList(gf.getRating(), gf);
+	    addGamefieldToTopList(gf);
 
 	    if (gf.getOccupiedTiles() == 0) {
 		// get all options for castle placement
@@ -80,8 +71,8 @@ public class DeepSearchPlacement {
 	}
     }
 
-    private IFoEGameboard createRandomBoard(int gamefieldWidth, int gamefieldHeight) {
-	return new Integer1DimArrayBoard(gamefieldWidth, gamefieldHeight);
+    private IFoEGameboard createRandomBoard() {
+	return new Integer1DimArrayBoard(getGamefieldWidth(), getGamefieldHeight());
     }
 
     private void offer(Deque<IFoEGameboard> queue, IFoEGameboard gf) {
@@ -104,63 +95,11 @@ public class DeepSearchPlacement {
 	    }
 	}
 
-	// offer new field at beginning or the end of queue 
+	// offer new field at beginning or the end of queue
 	if (r.nextInt(5) == 0) {
 	    queue.offerLast(gf);
 	} else {
 	    queue.offerFirst(gf);
-	}
-    }
-
-    private void addGamefieldToTopList(int rating, IFoEGameboard gamefieldClone) {
-	synchronized (this) {
-	    if (rating > maxRatingUntilNow) {
-		this.maxRatingUntilNow = rating;
-		this.bestRatingGamefield = gamefieldClone;
-	    }
-	}
-    }
-
-    public IFoEGameboard getBestRatedGamefield() {
-	synchronized (this) {
-	    return bestRatingGamefield;
-	}
-    }
-
-    public int getBestRating() {
-	synchronized (this) {
-	    return maxRatingUntilNow;
-	}
-    }
-
-    public static class ProgressLoggingThread extends Thread {
-	private final DeepSearchPlacement experiment;
-
-	public ProgressLoggingThread(DeepSearchPlacement experiment) {
-	    super("ProgressLogger");
-	    this.experiment = experiment;
-	}
-
-	@Override
-	public void run() {
-	    try {
-		IFoEGameboard bestLoggedGamefield = null;
-		while (true) {
-		    TimeUnit.SECONDS.sleep(10);
-		    System.gc();
-		    IFoEGameboard currentBestGamefield = experiment.getBestRatedGamefield();
-		    if (currentBestGamefield.equals(bestLoggedGamefield)) {
-			// don't repeat myself
-			experiment.log("No new best field. Current rating to beat is " + experiment.getBestRating()
-				+ ". Queue.size = " + experiment.queue.size());
-		    } else {
-			experiment.log("best field until now is:");
-			bestLoggedGamefield = currentBestGamefield;
-			BoardVisualizer.print(bestLoggedGamefield);
-		    }
-		}
-	    } catch (InterruptedException e) {
-	    }
 	}
     }
 }

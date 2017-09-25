@@ -3,39 +3,39 @@ package de.andre.process;
 import java.util.List;
 import java.util.Random;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import de.andre.data.IFoEGameboard;
 import de.andre.data.Tile;
 import de.andre.data.TileState;
 import de.andre.data.impl.Integer1DimArrayBoard;
-import de.andre.process.util.BoardVisualizer;
 import de.andre.process.util.GameBoardRepository;
 import de.andre.process.util.ManuelPlacement;
-import lombok.extern.log4j.Log4j;
 
-@Log4j
-public class EndlessConstruction {
-    private static final int ITEMS_BEFORE_SHRINK = 1_000_000;
-    private static final int ELEMENTS_TO_NOT_SHRINK = 5;
-    private static final int WAYS_LIKELYHOOD = 2;
-    private static final int GAMEFIELD_WIDTH = 24;
-    private static final int GAMEFIELD_HEIGHT = 20;
+@Component
+public class EndlessConstruction extends AbstractOptimization {
+    @Value("${exp.endlessconstruction.items.before.shrink}")
+    private int ITEMS_BEFORE_SHRINK = 1_000_000;
+    @Value("${exp.endlessconstruction.elements.to.not.shrink}")
+    private int ELEMENTS_TO_NOT_SHRINK = 5;
+    @Value("${exp.endlessconstruction.ways.likelyhood}")
+    private int WAYS_LIKELYHOOD = 2;
 
     private final GameBoardRepository repository = new GameBoardRepository();
 
-    public static void main(String[] args) {
-	new EndlessConstruction().start();
-    }
+    public void start() {
+	long seed = new Random().nextLong();
+	logParameter("ITEMS_BEFORE_SHRINK", ITEMS_BEFORE_SHRINK);
+	logParameter("ELEMENTS_TO_NOT_SHRINK", ELEMENTS_TO_NOT_SHRINK);
+	logParameter("WAYS_LIKELYHOOD", WAYS_LIKELYHOOD);
+	logParameter("random.seed", seed);
 
-    private static void log(String msg) {
-	log.info(msg);
-    }
-
-    private void start() {
-	Random r = new Random(2383284L);
-	IFoEGameboard startingBoard = createRandomBoard(GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT);
+	// seed = -6542860481660332438L;
+	Random r = new Random(seed);
+	IFoEGameboard startingBoard = createRandomBoard();
 	IFoEGameboard currentBoard = startingBoard;
 	repository.add(currentBoard);
-
 	ManuelPlacement.createAndPrintReference(startingBoard);
 
 	log("-----  start  ----");
@@ -65,18 +65,17 @@ public class EndlessConstruction {
 
 	    // add new board
 	    repository.add(currentBoard);
+	    addGamefieldToTopList(currentBoard);
 
 	    // apply garbage collection every now and then
 	    if (repository.size() >= ITEMS_BEFORE_SHRINK) {
 		repository.shrink(ELEMENTS_TO_NOT_SHRINK);
-		BoardVisualizer.print(repository.getTopRatedBoard());
-		log("");
 		System.gc();
 	    }
 	}
     }
 
-    public IFoEGameboard createRandomBoard(int gamefieldWidth, int gamefieldHeight) {
-	return new Integer1DimArrayBoard(gamefieldWidth, gamefieldHeight);
+    public IFoEGameboard createRandomBoard() {
+	return new Integer1DimArrayBoard(getGamefieldWidth(), getGamefieldHeight());
     }
 }

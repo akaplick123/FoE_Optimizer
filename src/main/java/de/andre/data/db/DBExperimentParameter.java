@@ -9,8 +9,11 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import lombok.Data;
+
 @Entity(name = "DBExperimentParameter")
 @Table(name = "EXP_PARAM")
+@Data
 public class DBExperimentParameter {
     @Id
     @Column(name = "ID_EXP_PARAM")

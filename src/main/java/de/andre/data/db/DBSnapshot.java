@@ -11,8 +11,11 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import lombok.Data;
+
 @Entity(name = "DBSnapshot")
 @Table(name = "EXP_SNAPSHOT")
+@Data
 public class DBSnapshot {
 
     @Id
