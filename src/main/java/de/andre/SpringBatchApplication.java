@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import de.andre.process.DeepSearchPlacement;
 import de.andre.process.EndlessConstruction;
 import de.andre.process.RandomDeepSearchPlacement;
+import de.andre.process.RandomDeepSearchPlacement2;
 
 @SpringBootApplication
 public class SpringBatchApplication implements CommandLineRunner {
@@ -19,6 +20,8 @@ public class SpringBatchApplication implements CommandLineRunner {
     private EndlessConstruction endlessConstruction;
     @Autowired
     private RandomDeepSearchPlacement randomDeepSearchPlacement;
+    @Autowired
+    private RandomDeepSearchPlacement2 randomDeepSearchPlacement2;
     @Autowired
     private DeepSearchPlacement deepSearchPlacement;
 
@@ -36,6 +39,13 @@ public class SpringBatchApplication implements CommandLineRunner {
 	    new Thread() {
 		public void run() {
 		    randomDeepSearchPlacement.runDBExperiment();
+		};
+	    }.start();
+	    break;
+	case "RandomDeepSearchPlacement2":
+	    new Thread() {
+		public void run() {
+		    randomDeepSearchPlacement2.runDBExperiment();
 		};
 	    }.start();
 	    break;
