@@ -51,6 +51,8 @@ public class RandomDeepSearchPlacement extends AbstractOptimization {
 	    iteration++;
 	    step = 0;
 
+	    // iterate over all currently known game fields and place a new tile
+	    // (if possible)
 	    Iterator<IFoEGameboard> iterator = queue.getIterator();
 	    while (iterator.hasNext()) {
 		step++;
@@ -74,8 +76,7 @@ public class RandomDeepSearchPlacement extends AbstractOptimization {
      * try to add a new building to the game field
      * 
      * @param gamefield
-     *            the game field to place the building at. But do not change
-     *            that field.
+     *            the game field to place the building at. Won't be changed.
      * @return a new game field with the added building or <code>null</code> if
      *         no building was added.
      */
@@ -89,6 +90,7 @@ public class RandomDeepSearchPlacement extends AbstractOptimization {
 	    return gfClone;
 	}
 
+	// it's 50/50 whether we try an house or an way tile
 	int buildOps = r.nextInt(2);
 	if (buildOps == 0) {
 	    // try to build an house
@@ -113,6 +115,15 @@ public class RandomDeepSearchPlacement extends AbstractOptimization {
 	}
     }
 
+    /**
+     * Choose at random
+     * 
+     * @param r
+     *            the random number generator
+     * @param options
+     *            the set of options to choose from (shall never be empty)
+     * @return exactly one option
+     */
     private static Tile choose(Random r, List<Tile> options) {
 	if (options.isEmpty()) {
 	    throw new NullPointerException("No options to choose from.");
@@ -123,6 +134,10 @@ public class RandomDeepSearchPlacement extends AbstractOptimization {
     }
 
     private class BestGamefields {
+	/**
+	 * a "key-value" store. Key is the number of used tiles and the value is
+	 * an list of some game fields that uses that much titles
+	 */
 	private HashMap<Integer, PreferNewSortedLimitedList<IFoEGameboard>> mapByUsedTiles = new HashMap<>();
 
 	/**
@@ -144,12 +159,19 @@ public class RandomDeepSearchPlacement extends AbstractOptimization {
 	    allGamefields.add(gamefield);
 	}
 
+	/**
+	 * removes every game field but not the top N (by rating) from this
+	 * queue
+	 */
 	public void reset() {
 	    for (PreferNewSortedLimitedList<IFoEGameboard> entry : mapByUsedTiles.values()) {
 		entry.shrink(MAX_SAVED_GAMEFIELDS_PER_RESET);
 	    }
 	}
 
+	/**
+	 * @return an iterator over all game fields that are currently checked.
+	 */
 	public Iterator<IFoEGameboard> getIterator() {
 	    ModifieableIterator<IFoEGameboard> iterator = new ModifieableIterator<>();
 	    for (PreferNewSortedLimitedList<IFoEGameboard> gamefields : mapByUsedTiles.values()) {
@@ -162,6 +184,12 @@ public class RandomDeepSearchPlacement extends AbstractOptimization {
 	}
     }
 
+    /**
+     * Compare by rating and occupied tiles. A higher rating and less occupied
+     * tiles are better.
+     * 
+     * @author andre
+     */
     private static class GamefieldComparator implements Comparator<IFoEGameboard> {
 	@Override
 	public int compare(IFoEGameboard o1, IFoEGameboard o2) {

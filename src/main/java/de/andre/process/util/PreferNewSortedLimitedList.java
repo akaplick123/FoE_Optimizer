@@ -3,7 +3,6 @@ package de.andre.process.util;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.TreeMap;
 
 /**
  * A list with the following features:
@@ -38,8 +37,6 @@ public class PreferNewSortedLimitedList<T> implements Iterable<T> {
 	this.comparator = comparator;
 	this.size = 0;
 	this.root = null;
-
-	new TreeMap<String, String>().put("", "");
     }
 
     /**
@@ -58,6 +55,7 @@ public class PreferNewSortedLimitedList<T> implements Iterable<T> {
 
 	size++;
 	if (size > maxSize) {
+	    // we reached the maximum size, so discard item with lowest rating
 	    removeLast();
 	}
     }
