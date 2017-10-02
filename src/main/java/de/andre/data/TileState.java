@@ -5,7 +5,7 @@ public enum TileState {
     /** auf dieser kachel steht ein Schloss */
     CASTLE(0, 7, 6), /** auf dieser Kachel steht ein Weg */
     WAY(-1, 1, 1), /** auf dieser Kachel steht ein Haus */
-    HOUSE(20, 2, 2), /** diese Kachel ist noch nicht belegt */
+    HOUSE(23, 3, 3), /** diese Kachel ist noch nicht belegt */
     FREE(-5, 1, 1);
 
     private final int value;

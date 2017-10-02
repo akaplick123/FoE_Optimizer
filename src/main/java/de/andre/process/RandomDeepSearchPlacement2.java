@@ -85,7 +85,7 @@ public class RandomDeepSearchPlacement2 extends AbstractOptimization {
 	    // there is not tile set until now, so we have to place the castle
 	    List<Tile> options = gamefield.getPlacementOptions(TileState.CASTLE);
 	    IFoEGameboard gfClone = gamefield.clone();
-	    Tile option = choose(r, options);
+	    Tile option = options.get(0);
 	    gfClone.placeBuildingWithoutAnyChecks(option.getX(), option.getY(), TileState.CASTLE);
 	    return gfClone;
 	}
