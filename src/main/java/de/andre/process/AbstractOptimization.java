@@ -37,6 +37,9 @@ public abstract class AbstractOptimization {
 	return GAMEFIELD_HEIGHT;
     }
 
+    /**
+     * @return an empty game field
+     */
     protected IFoEGameboard createRandomBoard() {
 	return new Integer1DimArrayBoard(getGamefieldWidth(), getGamefieldHeight());
     }
@@ -69,6 +72,13 @@ public abstract class AbstractOptimization {
 	logParameter("GAMEFIELD_HEIGHT", GAMEFIELD_HEIGHT);
     }
 
+    /**
+     * evaluate rating for the given game field and will add might add it to the
+     * top-list
+     * 
+     * @param gamefield
+     *            the game field to evaluate
+     */
     protected void addGamefieldToTopList(IFoEGameboard gamefield) {
 	synchronized (this) {
 	    if (gamefield.getRating() > maxRatingUntilNow) {
@@ -152,6 +162,7 @@ public abstract class AbstractOptimization {
 	    start();
 	} finally {
 	    logger.interrupt();
+	    logSnapshot(getBestRatedGamefield());
 	}
     }
 

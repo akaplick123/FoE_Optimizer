@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import de.andre.process.DeepSearchPlacement;
 import de.andre.process.EndlessConstruction;
+import de.andre.process.MonteCarloSearchTree;
 import de.andre.process.RandomDeepSearchPlacement;
 import de.andre.process.RandomDeepSearchPlacement2;
 
@@ -24,6 +25,8 @@ public class SpringBatchApplication implements CommandLineRunner {
     private RandomDeepSearchPlacement2 randomDeepSearchPlacement2;
     @Autowired
     private DeepSearchPlacement deepSearchPlacement;
+    @Autowired
+    private MonteCarloSearchTree monteCarloPlacement;
 
     @Override
     public void run(String... args) throws Exception {
@@ -53,6 +56,13 @@ public class SpringBatchApplication implements CommandLineRunner {
 	    new Thread() {
 		public void run() {
 		    deepSearchPlacement.runDBExperiment();
+		};
+	    }.start();
+	    break;
+	case "MonteCarloSearchTree":
+	    new Thread() {
+		public void run() {
+		    monteCarloPlacement.runDBExperiment();
 		};
 	    }.start();
 	    break;
